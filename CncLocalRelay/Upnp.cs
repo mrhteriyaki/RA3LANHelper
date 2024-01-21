@@ -14,6 +14,15 @@ namespace CncLocalRelay
             var discoverer = new NatDiscoverer();
             var device = await discoverer.DiscoverDeviceAsync();
             await device.CreatePortMapAsync(new Mapping(Protocol.Udp, PortNumber, PortNumber, "CNCOnline"));
+            Console.WriteLine("Opening port with UPNP: " + PortNumber);
+        }
+        public static async Task ClosePortAsync(int PortNumber)
+        {
+            var discoverer = new NatDiscoverer();
+            var device = await discoverer.DiscoverDeviceAsync();
+            await device.DeletePortMapAsync(new Mapping(Protocol.Udp, PortNumber, PortNumber, "CNCOnline"));
+
+            Console.WriteLine("Removing UPNP Port: " + PortNumber);
         }
 
         static IPAddress GetLocalIPAddresses()

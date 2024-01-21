@@ -46,9 +46,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FileControl.cs" />
+    <Compile Include="HostControl.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TcpRelay.cs" />
+    <Compile Include="RelayControl.cs" />
     <Compile Include="UdpRelay.cs" />
     <Compile Include="Upnp.cs" />
   </ItemGroup>
