@@ -17,7 +17,7 @@ This program redirects the random UDP port traffic used by NAT Negotiaton to a p
 
 
 ### Usage Instructions
-1. Download [CNCLocalRelay](./releases/CNCLocalRelay.zip) or compile yourself.
+1. Download [CNCLocalRelay](https://github.com/mrhteriyaki/RA3LANHelper/releases/download/v1/CNCLocalRelay.zip) or compile yourself.
 2. Run CNC Local Relay GUI.exe
 3. Enable redirection to the CNC-Online NAT Test server by clicking enable (Program must be running as admin for this).
 4. Choose a starting port or use the random one assigned.
