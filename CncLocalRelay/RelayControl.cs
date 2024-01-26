@@ -9,6 +9,9 @@ namespace CncLocalRelay
 {
     public class RelayControl
     {
+        //Use lookup for server.cnc-online.net to resolve IP destination for natneg.server.cnc-online.net.
+        //Potential issue can occur if public ip of server.cnc-online.net does not match natneg.server.cnc-online.net in future.
+        
         static readonly string server = "server.cnc-online.net";
         static UdpRelay UDPR;
 
