@@ -5,7 +5,12 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CncLocalRelay", "CncLocalRelay\CncLocalRelay.csproj", "{F784FCDB-89B9-4963-A81D-6EC3AA1235B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CNC Local Relay GUI", "CNC Local Relay GUI\CNC Local Relay GUI.csproj", "{1A898331-D6C9-4F78-B300-18D3F2184487}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CNC Local Relay GUI", "CNC Local Relay GUI\CNC Local Relay GUI.csproj", "{1A898331-D6C9-4F78-B300-18D3F2184487}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C8081F7A-130C-4F5A-8FEC-A99E002A1F4D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
