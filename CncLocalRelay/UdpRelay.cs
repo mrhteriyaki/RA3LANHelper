@@ -54,6 +54,7 @@ namespace CncLocalRelay
         {
             IPEndPoint targetEndpoint = new IPEndPoint(TargetIP, _port);
             IPEndPoint incomingEndPoint = new IPEndPoint(IPAddress.Any, 0);
+            //Console.WriteLine("Internal Port:" + incomingEndPoint.ToString());
             while (run_relay)
             {
                 byte[] receivedDataLocal;

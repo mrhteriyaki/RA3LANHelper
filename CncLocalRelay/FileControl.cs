@@ -40,23 +40,34 @@ namespace CncLocalRelay
             {
                 if (line.StartsWith(lineToCheck, StringComparison.OrdinalIgnoreCase))
                 {
-                    return true; 
+                    return true;
                 }
             }
 
-            return false; 
+            return false;
         }
 
 
         public static void AddLineToFile(string filePath, string lineToAdd)
         {
+            //Check to prevent append occuring on existing line.
+            using (var reader = new StreamReader(filePath))
+            {
+                reader.BaseStream.Seek(-1, SeekOrigin.End);
+                char lastChar = (char)reader.Read();
+                if (lastChar != '\n')
+                {
+                    lineToAdd = "\n" + lineToAdd;
+                }
+            }
+            
             using (StreamWriter writer = File.AppendText(filePath))
             {
                 writer.WriteLine(lineToAdd);
             }
         }
 
-       
+
         public static void RemoveLineFromFile(string filePath, string lineToRemove)
         {
             string[] lines = File.ReadAllLines(filePath);

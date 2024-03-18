@@ -13,7 +13,7 @@ namespace CncLocalRelay
             {
                 if (!FileControl.LineExists(filePath, lineData))
                 {
-                    Console.WriteLine("Adding host record.");
+                    Console.WriteLine("Adding host record.");                 
                     FileControl.AddLineToFile(filePath, lineData);
                 }
             }
