@@ -3,7 +3,8 @@ using System.Threading.Tasks;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net;
-using Open.Nat;
+using SharpOpenNat;
+
 
 namespace CncLocalRelay
 {
@@ -11,15 +12,13 @@ namespace CncLocalRelay
     {
         public static async Task OpenPortAsync(int PortNumber)
         {
-            var discoverer = new NatDiscoverer();
-            var device = await discoverer.DiscoverDeviceAsync();
+            var device = await NatDiscoverer.DiscoverDeviceAsync();
             await device.CreatePortMapAsync(new Mapping(Protocol.Udp, PortNumber, PortNumber, "CNCOnline"));
             Console.WriteLine("Opening port with UPNP: " + PortNumber);
         }
         public static async Task ClosePortAsync(int PortNumber)
         {
-            var discoverer = new NatDiscoverer();
-            var device = await discoverer.DiscoverDeviceAsync();
+            var device = await NatDiscoverer.DiscoverDeviceAsync();
             await device.DeletePortMapAsync(new Mapping(Protocol.Udp, PortNumber, PortNumber, "CNCOnline"));
 
             Console.WriteLine("Removing UPNP Port: " + PortNumber);

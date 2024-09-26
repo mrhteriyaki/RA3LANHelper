@@ -84,7 +84,7 @@ namespace CNC_Local_Relay_GUI
             }
 
         }
-
+        readonly string hostwarningadmin = "Failed to update system host file - this requires administrator rights.\nPlease re-launch this program using 'Run As Administrator'\nAlternatively check you have rights to the file:\nC:\\Windows\\System32\\Drivers\\etc\\hosts";
         private void btnHostEnable_Click(object sender, EventArgs e)
         {
             try
@@ -93,7 +93,7 @@ namespace CNC_Local_Relay_GUI
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed - this requires administrator rights.");
+                MessageBox.Show(hostwarningadmin);
                 Console.WriteLine(ex);
             }
 
@@ -109,7 +109,7 @@ namespace CNC_Local_Relay_GUI
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                MessageBox.Show("Failed - this requires administrator rights.");
+                MessageBox.Show(hostwarningadmin);
             }
             HostrecDisplay();
         }
