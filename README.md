@@ -19,7 +19,7 @@ These ports can be forwarded (with NAT Loopback) to allow internal access betwee
 
 
 ### Usage Instructions
-1. Download [CNCLocalRelay](https://github.com/mrhteriyaki/RA3LANHelper/releases/download/untagged-b31feadf2762b6db4dd2/CNCLocalRelay.zip) or compile yourself.
+1. Download [CNCLocalRelay](https://github.com/mrhteriyaki/RA3LANHelper/releases/download/release/CncLocalRelay.zip) or compile yourself.
 2. Run CNC Local Relay GUI.exe
 3. Enable redirection to the CNC-Online NAT Test server by clicking enable (Program must be running as admin for this).
 4. Choose a starting port or use the random one assigned.
