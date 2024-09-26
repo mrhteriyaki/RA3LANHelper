@@ -19,8 +19,8 @@ These ports can be forwarded (with NAT Loopback) to allow internal access betwee
 
 ### Usage Instructions
 1. Download [CNCLocalRelay](https://github.com/mrhteriyaki/RA3LANHelper/releases/download/release/CncLocalRelay.zip) or compile yourself.
-2. Run CNC Local Relay GUI.exe
-3. Enable redirection to the CNC-Online NAT Test server by clicking enable (Program must be running as admin for this).
+2. Run CNC Local Relay GUI.exe (For the first time, Run as Admin)
+3. Enable redirection to the CNC-Online NAT Test server by clicking enable under Hostfile.
 4. Choose a starting port or use the random one assigned.
 5. Click Start Relay (Windows Firewall warning may occur, make sure to check all network types and click Allow).
 6. Run RA3
