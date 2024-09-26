@@ -39,3 +39,7 @@ EG: PC1 has a start port 50000 would need UDP Ports 50000-50050 forwarded, PC2 w
 - The connection attempt between players only occurs for a short period of time when the player joins the match. The game indicates it is retrying to connect to players in the chat but it isn't, connection attempts will stop after the first minute.
 
 
+**Command Line Version**
+For a command line version of the program that includes console logging information, use the CncLocalRelay.exe
+The only parameter required is the starting port range eg: CnCLocalRelay.exe 51000
+This may also work with Linux systems - untested.
