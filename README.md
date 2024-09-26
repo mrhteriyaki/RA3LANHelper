@@ -7,13 +7,15 @@ Typical error that occurs with same player on the network between Players 1 and 
 Connection in progress: 1-2*
 
 
-**Problem:**\
-RA3 tries to create a P2P mesh network between each player and is unable when users 
-are behind the same NAT / single public IP, the destination IP:PORT is determined by the NAT Negotiation server using the source address of the client. Other CNC games and BFME2 connect directly to the internal IP of the P2P client, RA3 does not do this.
-The firewall overide port in RA3 does not work when set manually preventing the usage of normal port forwarding for each game client.
+RA3 tries to create a P2P mesh network between each player 
+and is unable to link users within the same internal network.
+The destination IP:PORT is determined by the NAT Negotiation server using the source address of the client. 
+Other CNC games and BFME2 connect directly to the internal IP of the P2P client, RA3 does not do this and attempts to use the public address.
+As the ports are dynamically selected they cannot be forwarded, this tool redirects them to a set range of ports that can be forwarded.
 
-**Solution:**\
-This program redirects the random UDP port traffic used by NAT Negotiaton to a port that is manually set and can then be forwarded (with NAT Loopback) to allow internal access between game clients.
+The firewall overide port may have been for this purpose in RA3, however it does not work when set manually.
+This program redirects the random UDP port traffic used by NAT Negotiaton to a port that is manually set by this tool.
+These ports can be forwarded (with NAT Loopback) to allow internal access between game clients.
 
 
 ### Usage Instructions

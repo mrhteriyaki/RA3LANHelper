@@ -36,10 +36,13 @@ namespace CNC_Local_Relay_GUI
             }
             else
             {
-                StreamWriter SW = new StreamWriter(sfln);
-                SW.Close();
+                using (StreamWriter SW = new StreamWriter(sfln))
+                {
+                    SW.Close();
+                }
             }
 
+            //Port number not set, allocate random high range start port.
             if (String.IsNullOrEmpty(txtPortOffset.Text))
             {
                 Random random = new Random();

@@ -51,16 +51,19 @@ namespace CncLocalRelay
         public static void AddLineToFile(string filePath, string lineToAdd)
         {
             //Check to prevent append occuring on existing line.
-            using (var reader = new StreamReader(filePath))
+            using (StreamReader reader = new StreamReader(filePath))
             {
-                reader.BaseStream.Seek(-1, SeekOrigin.End);
-                char lastChar = (char)reader.Read();
-                if (lastChar != '\n')
+                if (reader.BaseStream.Length > 0) //empty file check.
                 {
-                    lineToAdd = "\n" + lineToAdd;
-                }
+                    reader.BaseStream.Seek(-1, SeekOrigin.End);
+                    char lastChar = (char)reader.Read();
+                    if (lastChar != '\n')
+                    {
+                        lineToAdd = "\n" + lineToAdd;
+                    }
+                }               
             }
-            
+
             using (StreamWriter writer = File.AppendText(filePath))
             {
                 writer.WriteLine(lineToAdd);
