@@ -6,24 +6,27 @@ Typical error that occurs with same player on the network between Players 1 and 
 >*Connections are in progress, or connection problem detected. Please wait for the connection to finish, or kick the player who has the connection problem.  
 Connection in progress: 1-2*  
 
-This problem occurs due to a limitation in most Router NAT services that don't allow connections from within the network to access the public side port.  
-It requires a loopback which can be achived with a port forward rule to known port numbers.  
-The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.  
+This problem occurs due to a limitation in most Router NAT services that don't allow connections from within the network to access the public side port.
+It requires a loopback which can be achived with a port forward rule to known port numbers.
+The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.
 This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.  
 
 ## Instructions:  
 1. Download the tool(available from releases on the right).  
 2. Run the tool as administrator (Admin Rights are only required for the Host Redirection setting change).  
-3. Click Enable on NAT-NEG Redirection **(This will redirect NAT Negotiation traffic to the local machine and persists even if the app is closed)**
-4. Select a starting port range number or use the random one provided (The port range must be unique per machine within your network).  
-5. On your router add the port forward rule to include a range of 50 ports from the number selected, to your device. Most routers will have a start and end port option so that you can forward a 'range' of ports (Multiple ports).  
+3. Click Enable on NAT-NEG Redirection  
+**(This will redirect NAT Negotiation traffic to the local machine and persists even if the app is closed)**  
+4. Select a starting port range number or use the random one provided.  
+(The port range must be unique per machine within your network).  
+5. On your router add the port forward rule to include a range of 50 ports from the number selected, to your device.  
+ Most routers will have a start and end port option so that you can forward a 'range' of ports (Multiple ports).  
   If you do not know how to do this, you can try the UPNP automatic port forwarding, just tick the box in the app to enable it.  
 6. Click Start Relay.  
 7. If you have any Windows Firewall prompts, click allow as it uses a listening port for inbound network traffic.  
 8. Play RA3 Online.  
 
 Image the tool interface:  
-![uiimage](Images/Image1.PNG)  
+![uiimage](Images/Image1.png)  
 
 **Port Forwarding Note:**  
 UPNP will try to automatically open required ports but can be unreliable depending on the router or may not include NAT Loopback.
