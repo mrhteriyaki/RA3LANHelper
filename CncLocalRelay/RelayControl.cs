@@ -10,7 +10,7 @@ namespace CncLocalRelay
     public class RelayControl
     {
         //Use lookup for server.cnc-online.net to resolve IP destination for natneg.server.cnc-online.net.
-        //Potential issue can occur if public ip of server.cnc-online.net does not match natneg.server.cnc-online.net in future.
+        //Potential issue can occur if public ip of server.cnc-online.net does not match natneg.server.cnc-online.net in future, it is currently a CNAME record for server.cnc-online.net.
         
         static readonly string server = "server.cnc-online.net";
         static UdpRelay UDPR;
@@ -32,15 +32,16 @@ namespace CncLocalRelay
 
             Console.WriteLine("Starting relay - natneg server ip: " + serverip);
 
-            //await UPNPControl.OpenPortAsync(56000);
-
             UDPR = new UdpRelay(serverip, 27901, StartPort, UPNP);
             UDPR.RunRelay();
         }
 
         public static void StopRelay()
         {
-            UDPR.StopRelay();
+            if(UDPR != null)
+            {
+                UDPR.StopRelay();
+            }
         }
 
     }

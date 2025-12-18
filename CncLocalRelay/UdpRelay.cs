@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading;
+using System.Diagnostics;
 
 namespace CncLocalRelay
 {
@@ -209,6 +210,20 @@ namespace CncLocalRelay
 
         public void StopRelay()
         {
+            try
+            {
+                foreach (int Portnumber in OpenedPortsUPNP)
+                {
+                    UPNPControl.ClosePortAsync(Portnumber);
+                }
+                OpenedPortsUPNP.Clear();
+            }
+            catch(Exception uex)
+            {
+                Debug.WriteLine("Error closing upnp: " + uex.Message);
+            }
+
+
             localUdpClient.Close();
             foreach (ConnectionSession CSS in sessionList)
             {
@@ -218,13 +233,8 @@ namespace CncLocalRelay
             {
                 P2P.udpClient.Close();
             }
-            run_relay = false;
-
-            foreach(int Portnumber in OpenedPortsUPNP)
-            {
-                UPNPControl.ClosePortAsync(Portnumber);
-            }
-            OpenedPortsUPNP.Clear();
+            run_relay = false;        
+            
 
         }
 

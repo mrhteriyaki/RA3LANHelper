@@ -1,0 +1,33 @@
+<Window xmlns="https://github.com/avaloniaui"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+		x:Class="CncLocalRelayUI.MainWindow"
+		Title="CNC Relay"
+		Width="310"
+		Height="260">
+	<StackPanel Margin="10">
+		<TextBlock Text="CNC LAN Relay Tool" Margin="0,0,0,10" />
+
+		<Grid ColumnDefinitions="Auto,80,Auto,Auto">
+			<TextBlock Text="Port Start:" Grid.Column="0" VerticalAlignment="Center"/>
+			<TextBox x:Name="txtPortStart" Grid.Column="1" Margin="5,0,10,10" TextChanged="txtPortChanged"/>
+		</Grid>
+
+		<TextBlock x:Name="txtRedirection" Text="NAT-NEG Redirection: Disabled" Grid.Column="0" Margin="0,10,0,5" />
+		<Grid ColumnDefinitions="Auto,Auto" Margin="0,0,0,10">
+			<Button x:Name="btnEnableHost" Content="Enable" Grid.Column="0" Click="EnableHost" />
+			<Button x:Name="btnDisableHost" Content="Disable" Grid.Column="1" Click="DisableHost" />
+		</Grid>
+
+		<CheckBox x:Name="chkUPNP" Content="Enable UPNP Automatic Forwarding" Margin="0,0,0,10" HorizontalAlignment="Left" IsCheckedChanged="chkUPNP_CheckedChanged"/>
+
+		<TextBlock Text="Relay Status: Stopped" x:Name="txtRelayStatus" Margin="0,0,0,10" />
+		<Grid ColumnDefinitions="Auto,Auto" Margin="0,0,0,5">
+			<Button x:Name="btnStart" Content="Start Relay" Grid.Column="0" Click="OnStartClicked" IsEnabled="True" />
+			<Button x:Name="btnStop" Content="Stop Relay" Grid.Column="1" Click="OnStopClicked" IsEnabled="False" />
+		</Grid>
+		
+	</StackPanel>
+</Window>
