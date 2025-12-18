@@ -51,4 +51,8 @@ The only parameter required is the starting port range eg: CnCLocalRelay.exe 510
 This may also work with Linux systems but is untested.
 
 **Linux Support Notes**
-Not tested however is built without any windows dependencies.
+The app runs on linux however has not been tested.
+Extract the tar.gz file and run the CncLocalRelayUI file.
+Redirecting the nat negotiation requires sudo permissions to update the `/etc/hosts` file.
+It needs to add the line:
+`127.0.0.1 natneg.server.cnc-online.net`
