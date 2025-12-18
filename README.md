@@ -1,37 +1,36 @@
 # Command and Conquer Red Alert 3 LAN Helper.
 
-This program fixes a connection issue within LANs for Revora / CNC Online  
+This program fixes the connection 1-2 issue that occurs within LANs clients while using CNC Online / Revora.  
 
 Typical error that occurs with same player on the network between Players 1 and 2.  
 >*Connections are in progress, or connection problem detected. Please wait for the connection to finish, or kick the player who has the connection problem.  
 Connection in progress: 1-2*  
 
+This problem occurs due to a limitation in most Router NAT services that don't allow connections from within the network to access the public side port.  
+It requires a loopback which can be achived with a port forward rule to known port numbers.  
+The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.  
+This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.  
 
-RA3 tries to create a P2P mesh network between each player and is unable to link users within the same internal network.
-The destination IP:PORT is determined by the NAT Negotiation server using the source address of the client.
-Other CNC games and BFME2 connect directly to the internal IP of the P2P client, RA3 does not do this and attempts to use the public address.
-As the ports are dynamically selected they cannot be forwarded, this tool redirects them to a set range of ports that can be forwarded.  
+## Instructions:  
+1. Download the tool(available from releases on the right).  
+2. Run the tool as administrator (Admin Rights are only required for the Host Redirection setting change).  
+3. Click Enable on NAT-NEG Redirection **(This will redirect NAT Negotiation traffic to the local machine and persists even if the app is closed)**
+4. Select a starting port range number or use the random one provided (The port range must be unique per machine within your network).  
+5. On your router add the port forward rule to include a range of 50 ports from the number selected, to your device. Most routers will have a start and end port option so that you can forward a 'range' of ports (Multiple ports).  
+  If you do not know how to do this, you can try the UPNP automatic port forwarding, just tick the box in the app to enable it.  
+6. Click Start Relay.  
+7. If you have any Windows Firewall prompts, click allow as it uses a listening port for inbound network traffic.  
+8. Play RA3 Online.  
 
-The firewall overide port may have been for this purpose in RA3, however it does not work when set manually.
-This program redirects the random UDP port traffic used by NAT Negotiaton to a port that is manually set by this tool.
-These ports can be forwarded (with NAT Loopback) to allow internal access between game clients.
-
-
-### Usage Instructions
-1. Download [CNCLocalRelay](https://github.com/mrhteriyaki/RA3LANHelper/releases/download/release/CncLocalRelay.zip) or compile yourself.
-2. Run CNC Local Relay GUI.exe (For the first time, Run as Admin)
-3. Enable redirection to the CNC-Online NAT Test server by clicking enable under Hostfile.
-4. Choose a starting port or use the random one assigned.
-5. Click Start Relay (Windows Firewall warning may occur, make sure to check all network types and click Allow).
-6. Run RA3
- 
+Image the tool interface:  
+![uiimage](Images/Image1.PNG)  
 
 **Port Forwarding Note:**  
 UPNP will try to automatically open required ports but can be unreliable depending on the router or may not include NAT Loopback.
 You can manually port forward on your router to make it more reliable.
 RA3 slowly increments the port number in use, so forward a range of 50 ports from the starting port number set on the relay.
 EG: PC1 has a start port 50000 would need UDP Ports 50000-50050 forwarded, PC2 with start port 40000 would need 40000-40050.  
-NAT has been successfully tested on a Mikrotik router.  
+This has been successfully tested on a Mikrotik router with manual port forwards.  
 
 **Notes & Limitations**
 - Dropout / Disconnection handling does not work if you stop the relay and resume it will cause player dropout.
@@ -43,3 +42,6 @@ NAT has been successfully tested on a Mikrotik router.
 For a command line version of the program that includes console logging information, use the CncLocalRelay.exe
 The only parameter required is the starting port range eg: CnCLocalRelay.exe 51000
 This may also work with Linux systems but is untested.
+
+**Linux Support Notes**
+Not tested however is built without any windows dependencies.
