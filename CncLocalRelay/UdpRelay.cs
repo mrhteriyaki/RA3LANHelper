@@ -44,9 +44,6 @@ namespace CncLocalRelay
             {
                 client = new IPEndPoint(IP, Port);
                 udpClient = new UdpClient(LocalPort);
-                udpClient.Client.SetIPProtectionLevel(IPProtectionLevel.Unrestricted);
-                udpClient.AllowNatTraversal(true);
-
                 remoteServer = new IPEndPoint(IPAddress.Any, 0);
             }
         }
@@ -86,7 +83,7 @@ namespace CncLocalRelay
                 {
                     int localport = counter + _StartPortOffset;
                     sessionList.Add(new ConnectionSession(incomingEndPoint.Address, incomingEndPoint.Port, localport));
-                    Console.WriteLine("New outbound connection " + sessionList[counter].udpClient.Client.LocalEndPoint + " " + targetEndpoint);
+                    Console.WriteLine($"New outbound connection {sessionList[counter].udpClient.Client.LocalEndPoint} {targetEndpoint}");
                     if (_UPNP)
                     {
                         OpenedPortsUPNP.Add(localport);

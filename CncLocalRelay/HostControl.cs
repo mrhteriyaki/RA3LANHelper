@@ -4,16 +4,17 @@ namespace CncLocalRelay
 {
     public class HostControl
     {
-        readonly static string filePath = "C:\\Windows\\System32\\drivers\\etc\\hosts";
         readonly static string lineData = "127.0.0.1 natneg.server.cnc-online.net";
 
         public static void EnableHostRecord(bool Enable)
         {
+            string filePath = GetHostLocation();
+
             if (Enable)
             {
                 if (!FileControl.LineExists(filePath, lineData))
                 {
-                    Console.WriteLine("Adding host record.");                 
+                    Console.WriteLine("Adding host record.");
                     FileControl.AddLineToFile(filePath, lineData);
                 }
             }
@@ -25,12 +26,28 @@ namespace CncLocalRelay
                     FileControl.RemoveLineFromFile(filePath, lineData);
                 }
             }
-            
         }
 
         public static bool CheckHostRecord()
         {
-            return FileControl.LineExists(filePath, lineData);
+            return FileControl.LineExists(GetHostLocation(), lineData);
+        }
+
+        public static string GetHostLocation()
+        {
+            string filePath;
+            if (OperatingSystem.IsWindows())
+            {
+                return "C:\\Windows\\System32\\drivers\\etc\\hosts";
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                return "/etc/hosts";
+            }
+            else
+            {
+                throw new Exception("Unsupported OS");
+            }
         }
 
 
