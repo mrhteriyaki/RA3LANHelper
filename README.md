@@ -6,8 +6,11 @@ Typical error that occurs with same player on the network between Players 1 and 
 >*Connections are in progress, or connection problem detected. Please wait for the connection to finish, or kick the player who has the connection problem.  
 Connection in progress: 1-2*  
 
-This problem occurs due to a limitation in most Router NAT services that don't allow connections from within the network to access the public side port for other devices on the same network.
+## This problem:
+A limitation in most Router NAT services doesn't allow connections from within the network to access the public side port opened by other devices.
 The NAT Negotiation server provides the public internet address to other clients, which due to the limitation doesn't allow clients on the same network to reach each other.
+
+## The fix:
 A nat-loopback connection can be achived with a port forward rule when using a static number port/s.
 The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.
 This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.  
