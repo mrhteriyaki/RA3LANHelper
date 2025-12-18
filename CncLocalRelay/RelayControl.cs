@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CncLocalRelay
@@ -18,21 +20,35 @@ namespace CncLocalRelay
         public static async Task RunRelay(int StartPort, bool UPNP)
         {
 
-            string serverip = string.Empty;
+            string natneg_server = string.Empty;
             foreach (IPAddress ip in Dns.GetHostAddresses(server))
             {
-                serverip = ip.ToString();
+                natneg_server = ip.ToString();
                 break;
             }
-            if (String.IsNullOrEmpty(serverip))
+            if (String.IsNullOrEmpty(natneg_server))
             {
-                Console.WriteLine("Could not get IP for " + server);
+                Trace.WriteLine("Could not get IP for " + server);
                 return;
             }
 
-            Console.WriteLine("Starting relay - natneg server ip: " + serverip);
+            try
+            {
+                PublicIP.Update();
+                Trace.WriteLine($"Public IP Detected: {PublicIP.GetString()}");
 
-            UDPR = new UdpRelay(serverip, 27901, StartPort, UPNP);
+                Thread NDisThread = new Thread(() => LocalNeighbours.RunDiscovery(StartPort));
+                NDisThread.Name = "NDisThread";
+                NDisThread.Start();
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine("Could not get Public IP.");
+            }
+
+            Trace.WriteLine("Starting relay - natneg server ip: " + natneg_server);
+            UdpRelay.NatNegRealServer = IPAddress.Parse(natneg_server);
+            UDPR = new UdpRelay(StartPort, UPNP);
             UDPR.RunRelay();
         }
 

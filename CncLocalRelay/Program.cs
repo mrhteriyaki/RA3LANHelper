@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -16,8 +17,8 @@ namespace CncLocalRelay
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Acts as a relay to natneg.server.cnc-online.net to allow access for multiple clients on the same LAN.");
-                Console.WriteLine("Arguments: Starting port number.");
+                Trace.WriteLine("Acts as a relay to natneg.server.cnc-online.net to allow access for multiple clients on the same LAN.");
+                Trace.WriteLine("Arguments: Starting port number.");
                 return;
             }
             

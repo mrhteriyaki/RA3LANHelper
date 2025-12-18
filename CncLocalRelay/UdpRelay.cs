@@ -9,64 +9,53 @@ namespace CncLocalRelay
 {
     class UdpRelay
     {
-        bool run_relay = true;
-        IPAddress TargetIP;
-        int _port;
-        
+        public static IPAddress NatNegRealServer;
+
+        public static bool run_relay = true;
+        int natneg_port = 27901; //NAT Negotiation Server Port
         bool _UPNP = false;
         List<int> OpenedPortsUPNP = new List<int>();
 
-        UdpClient localUdpClient;
+        UdpClient localNatNegUdpClient;
         Thread inThread;
 
         List<ConnectionSession> sessionList;
         List<ConnectionSession> P2PClients;
         int _StartPortOffset = 50000;
 
-        public UdpRelay(string targetIP, int Port, int StartPortOffset, bool UPNP)
+        public UdpRelay(int StartPortOffset, bool UPNP)
         {
-            TargetIP = IPAddress.Parse(targetIP);
-            _port = Port;
-            localUdpClient = new UdpClient(_port);
+            if (NatNegRealServer == null)
+            {
+                throw new Exception("Must set NatNegRealServer");
+            }
+            localNatNegUdpClient = new UdpClient(natneg_port);
             _UPNP = UPNP;
             sessionList = new List<ConnectionSession>();
             P2PClients = new List<ConnectionSession>();
             _StartPortOffset = StartPortOffset;
         }
 
-        class ConnectionSession
-        {
-            public IPEndPoint client;
-            public IPEndPoint remoteServer;
-            public UdpClient udpClient;
-
-            public ConnectionSession(IPAddress IP, int Port, int LocalPort)
-            {
-                client = new IPEndPoint(IP, Port);
-                udpClient = new UdpClient(LocalPort);
-                remoteServer = new IPEndPoint(IPAddress.Any, 0);
-            }
-        }
-
         void Relay()
         {
-            IPEndPoint targetEndpoint = new IPEndPoint(TargetIP, _port);
+            IPEndPoint targetEndpoint = new IPEndPoint(NatNegRealServer, natneg_port);
             IPEndPoint incomingEndPoint = new IPEndPoint(IPAddress.Any, 0);
-            //Console.WriteLine("Internal Port:" + incomingEndPoint.ToString());
+
             while (run_relay)
             {
+                //Incoming data from local RA3 client destined for NAT NEG Server.
                 byte[] receivedDataLocal;
                 try
                 {
-                    receivedDataLocal = localUdpClient.Receive(ref incomingEndPoint);
+                    receivedDataLocal = localNatNegUdpClient.Receive(ref incomingEndPoint);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error:" + ex);
+                    Trace.WriteLine("Error:" + ex);
                     continue;
                 }
 
-
+                //Setup ConnectionSession for each unique source port identified from local ra3 client, remap port number to user set range.
                 bool new_session = true;
                 int counter = 0;
                 foreach (ConnectionSession CSS in sessionList)
@@ -78,12 +67,12 @@ namespace CncLocalRelay
                     }
                     counter++;
                 }
-
+                //ConnectionSession provides relay for each re-mapped port for p2p clients, port numbers will be related by control server to other clients.
                 if (new_session)
                 {
                     int localport = counter + _StartPortOffset;
                     sessionList.Add(new ConnectionSession(incomingEndPoint.Address, incomingEndPoint.Port, localport));
-                    Console.WriteLine($"New outbound connection {sessionList[counter].udpClient.Client.LocalEndPoint} {targetEndpoint}");
+                    Trace.WriteLine($"New outbound connection {sessionList[counter].udpClient.Client.LocalEndPoint} {targetEndpoint}");
                     if (_UPNP)
                     {
                         OpenedPortsUPNP.Add(localport);
@@ -92,17 +81,15 @@ namespace CncLocalRelay
                     Thread sessionThread = new Thread(() => sessionRelay(counter));
                     sessionThread.Start();
                 }
-
                 sessionList[counter].udpClient.Send(receivedDataLocal, receivedDataLocal.Length, targetEndpoint);
-
             }
         }
 
         void sessionRelay(int session_index)
         {
+            //Process inbound packets.
             while (run_relay)
             {
-
                 try
                 {
                     byte[] receivedDataRemote;
@@ -112,37 +99,41 @@ namespace CncLocalRelay
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Error:" + ex);
+                        Trace.WriteLine("Error:" + ex);
                         continue;
                     }
 
-                    //Origin check, if response from target server, use localUdpClient otherwise P2P Traffic.
-                    if (sessionList[session_index].remoteServer.Address.Equals(TargetIP))
+                    if (sessionList[session_index].IsNatNeg())
                     {
-                        //Target NAT Server
-                        localUdpClient.Send(receivedDataRemote, receivedDataRemote.Length, sessionList[session_index].client);
-                        //Console.WriteLine($"SRLY {sessionList[session_index].remoteServer} -> {localUdpClient.Client.LocalEndPoint} -> {sessionList[session_index].client} HASH:{receivedDataRemote.GetHashCode()}");
+                        //Response from real NAT NEG server, relay to local ra3 client using natneg source port.
+
+                        //Direct Peer address replacement.
+                        var pubip = PublicIP.Get();
+                        byte[] findByte = [pubip[0], pubip[1], pubip[2], pubip[3]];
+                        //for each neighbor, replace with their local ip and port number start.
+                        foreach (var nb in LocalNeighbours.neighboursList)
+                        {
+                            byte[] replaceByte = nb.Address.GetAddressBytes();
+                            ReplacePattern(receivedDataRemote, findByte, replaceByte, nb.StartPort);
+                        }
+
+                        localNatNegUdpClient.Send(receivedDataRemote, receivedDataRemote.Length, sessionList[session_index].client);
                     }
                     else
                     {
                         //P2P Traffic - give the internal loopback interface different ports per client for identification of return sender.
-                        P2PInternalRelay(sessionList[session_index].remoteServer, receivedDataRemote, sessionList[session_index].client, session_index);
-
-                        //Console.WriteLine($"PRLY {sessionList[session_index].remoteServer} -> {sessionList[session_index].udpClient.Client.LocalEndPoint} -> {sessionList[session_index].client} HASH:{receivedDataRemote.GetHashCode()}");
+                        //Clients cannot share port numbers due to common 127.0.0.1 ip - split clients up by port for identifcation by local ra3.
+                        P2PRelaySetup(sessionList[session_index].remoteServer, receivedDataRemote, sessionList[session_index].client, session_index);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Connection closed: " + sessionList[session_index].client + " Exception:" + ex.ToString());
+                    Trace.WriteLine("Connection closed: " + sessionList[session_index].client + " Exception:" + ex.ToString());
                 }
-
-
-
-
             }
         }
 
-        void P2PInternalRelay(IPEndPoint P2PClientEndpoint, byte[] message, IPEndPoint LocalEndpoint, int session_index)
+        void P2PRelaySetup(IPEndPoint P2PClientEndpoint, byte[] message, IPEndPoint LocalEndpoint, int session_index)
         {
             //Create new UDP Client to relay each P2P client to a seperate loopback port.
             bool newclient = true;
@@ -160,21 +151,19 @@ namespace CncLocalRelay
             if (newclient)
             {
                 P2PClients.Add(new ConnectionSession(P2PClientEndpoint.Address, P2PClientEndpoint.Port, 0));
-                Console.WriteLine("New peer connection: " + P2PClientEndpoint + " " + sessionList[session_index].udpClient.Client.LocalEndPoint);
+                Trace.WriteLine("New peer connection: " + P2PClientEndpoint + " " + sessionList[session_index].udpClient.Client.LocalEndPoint);
                 Thread P2PReplyThread = new Thread(() => P2PRelay(count, session_index));
                 P2PReplyThread.Start();
             }
 
             //Relay Data to local endpoint.
-            //Console.WriteLine($"Relay P2P Message from {P2PClients[count].client}");
+            //Trace.WriteLine($"Relay P2P Message from {P2PClients[count].client}");
             P2PClients[count].udpClient.Send(message, message.Length, LocalEndpoint);
-
-
         }
 
         void P2PRelay(int P2PIndex, int session_index)
         {
-
+            //Data sent from Local Client to p2p loopback ports, relay from original udp session relays.
             while (run_relay)
             {
                 try
@@ -187,21 +176,20 @@ namespace CncLocalRelay
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine("Error:" + ex);
+                        Trace.WriteLine("Error:" + ex);
                         continue;
                     }
 
                     //Relay internal message by original port to client.
                     sessionList[session_index].udpClient.Send(receivedDataRemote, receivedDataRemote.Length, P2PClients[P2PIndex].client);
-                    //Console.WriteLine($"Relay P2P Message Back to {P2PClients[P2PIndex].client}");
+                    //Trace.WriteLine($"Relay P2P Message Back to {P2PClients[P2PIndex].client}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("P2P Connection Closed: " + P2PClients[P2PIndex].client); //connection closed.
-                    Console.WriteLine(ex);
+                    Trace.WriteLine("P2P Connection Closed: " + P2PClients[P2PIndex].client); //connection closed.
+                    Trace.WriteLine(ex);
                 }
             }
-
         }
 
 
@@ -215,23 +203,23 @@ namespace CncLocalRelay
                 }
                 OpenedPortsUPNP.Clear();
             }
-            catch(Exception uex)
+            catch (Exception uex)
             {
                 Debug.WriteLine("Error closing upnp: " + uex.Message);
             }
 
 
-            localUdpClient.Close();
+            localNatNegUdpClient.Close();
             foreach (ConnectionSession CSS in sessionList)
             {
                 CSS.udpClient.Close();
             }
-            foreach(ConnectionSession P2P in P2PClients)
+            foreach (ConnectionSession P2P in P2PClients)
             {
                 P2P.udpClient.Close();
             }
-            run_relay = false;        
-            
+            run_relay = false;
+
 
         }
 
@@ -242,6 +230,46 @@ namespace CncLocalRelay
         }
 
 
+        static void ReplacePattern(byte[] data, byte[] findPrefix4, byte[] replacePrefix4, int StartPortRange, int range = 50)
+        {
+            if (findPrefix4.Length != 4 || replacePrefix4.Length != 4)
+            {
+                throw new ArgumentException("findPrefix4 and replacePrefix4 must be exactly 4 bytes.");
+            }
+
+            ushort startPort = (ushort)StartPortRange;
+
+            ushort endPort = (ushort)(startPort + range);
+
+            for (int i = 0; i <= data.Length - 6; i++)
+            {
+                // Match first 4 bytes (the "IP"/prefix portion)
+                bool match = true;
+                for (int j = 0; j < 4; j++)
+                {
+                    if (data[i + j] != findPrefix4[j])
+                    {
+                        match = false;
+                        break;
+                    }
+                }
+                if (!match) continue;
+
+                // Read port (big-endian / network byte order)
+                ushort port = (ushort)((data[i + 4] << 8) | data[i + 5]);
+
+                // Only replace if port is in [startPort..startPort+range]
+                if (port < startPort || port > endPort)
+                {
+                    continue;
+                }
+
+                // Replace the 4-byte prefix, keep the port bytes as-is
+                Buffer.BlockCopy(replacePrefix4, 0, data, i, 4);
+
+                i += 5; // skip past this match
+            }
+        }
 
 
 

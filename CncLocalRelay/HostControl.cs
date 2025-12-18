@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace CncLocalRelay
 {
@@ -14,7 +15,7 @@ namespace CncLocalRelay
             {
                 if (!FileControl.LineExists(filePath, lineData))
                 {
-                    Console.WriteLine("Adding host record.");
+                    Trace.WriteLine("Adding host record.");
                     FileControl.AddLineToFile(filePath, lineData);
                 }
             }
@@ -22,7 +23,7 @@ namespace CncLocalRelay
             {
                 if (FileControl.LineExists(filePath, lineData))
                 {
-                    Console.WriteLine("Removing host record");
+                    Trace.WriteLine("Removing host record");
                     FileControl.RemoveLineFromFile(filePath, lineData);
                 }
             }
