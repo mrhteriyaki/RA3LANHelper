@@ -22,7 +22,7 @@ This program acts as a proxy that relays the traffic from the random ports to a 
 **(This will redirect NAT Negotiation traffic to the local machine and persists even if the app is closed)**  
 4. Select a starting port range number or use the random one provided.  
 (The port range must be unique per machine within your network).  
-5. On your router add the port forward rule to include a range of 50 ports from the number selected, to your device.  
+5. On your router add the port forward rule to include a range of 50 ports from the number selected, to your device.
  Most routers will have a start and end port option so that you can forward a 'range' of ports (Multiple ports).
   If you do not know how to do this, you can try UPNP automatic port forwarding.
 6. Click Start Relay.  
