@@ -13,12 +13,18 @@ namespace CncLocalRelay
         public IPEndPoint client;
         public IPEndPoint remoteServer;
         public UdpClient udpClient;
+        int _LocalPort;
 
         public ConnectionSession(IPAddress IP, int Port, int LocalPort)
         {
+            _LocalPort = LocalPort;
             client = new IPEndPoint(IP, Port);
-            udpClient = new UdpClient(LocalPort);
+            udpClient = new UdpClient(_LocalPort);
             remoteServer = new IPEndPoint(IPAddress.Any, 0);
+        }
+        public int GetPort()
+        {
+            return _LocalPort;  
         }
 
         public bool IsNatNeg()
@@ -29,5 +35,10 @@ namespace CncLocalRelay
             }
             return false;
         }
+
+
+
     }
+
+
 }

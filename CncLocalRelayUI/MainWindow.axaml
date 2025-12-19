@@ -5,8 +5,8 @@
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		x:Class="CncLocalRelayUI.MainWindow"
 		Title="CNC Relay"
-		Width="330"
-		Height="330">
+		Width="350"
+		Height="400">
 	<StackPanel Margin="10">
 		<TextBlock Text="CNC LAN Relay Tool" Margin="0,0,0,10" />
 
@@ -22,6 +22,7 @@
 		</Grid>
 
 		<CheckBox x:Name="chkUPNP" Content="Enable UPNP Automatic Forwarding" Margin="0,0,0,10" HorizontalAlignment="Left" IsCheckedChanged="chkUPNP_CheckedChanged"/>
+		<CheckBox x:Name="chkAltPeer" Content="Alternate Peering Mode" Margin="0,0,0,10" HorizontalAlignment="Left" IsCheckedChanged="chkAltPeer_CheckedChanged"/>
 
 		<TextBlock Text="Relay Status: Stopped" x:Name="txtRelayStatus" Margin="0,0,0,10" />
 		<Grid ColumnDefinitions="Auto,Auto" Margin="0,0,0,5">

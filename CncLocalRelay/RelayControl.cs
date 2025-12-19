@@ -38,10 +38,12 @@ namespace CncLocalRelay
                 Trace.WriteLine($"Public IP Detected: {PublicIP.GetString()}");
 
                 Thread NDisThread = new Thread(() => LocalNeighbours.RunDiscovery(StartPort));
+                NDisThread.IsBackground = true;
+
                 NDisThread.Name = "NDisThread";
                 NDisThread.Start();
             }
-            catch(Exception ex)
+            catch
             {
                 Trace.WriteLine("Could not get Public IP.");
             }

@@ -33,7 +33,7 @@ namespace CncLocalRelay
                 }
             }
 
-            RelayControl.RunRelay(StartPort, upnp);
+            await RelayControl.RunRelay(StartPort, upnp);
         }
 
         

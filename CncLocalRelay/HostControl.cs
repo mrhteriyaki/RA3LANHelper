@@ -36,7 +36,6 @@ namespace CncLocalRelay
 
         public static string GetHostLocation()
         {
-            string filePath;
             if (OperatingSystem.IsWindows())
             {
                 return "C:\\Windows\\System32\\drivers\\etc\\hosts";

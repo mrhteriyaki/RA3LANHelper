@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace CncLocalRelay
 {
@@ -15,9 +16,14 @@ namespace CncLocalRelay
     {
         public IPAddress Address;
         public int StartPort;
+        public List<GameConnSession> remoteSessions = new();
 
-        static List<LocalNeighbours> neighboursList = new List<LocalNeighbours>();
+        static List<LocalNeighbours> neighboursList = new();
+        static List<GameConnSession> localSessions = new();
+
         private static readonly object _nLock = new();
+        private static readonly object _sLock = new();
+        private static readonly object _sendLock = new();
 
         static int localStartPort;
         static UdpClient nbUdpClient = new UdpClient(48632);
@@ -27,8 +33,9 @@ namespace CncLocalRelay
             localStartPort = startPort;
 
             neighboursList.Clear();
+            localSessions.Clear();
 
-            Thread runSend = new Thread(() => SendAdvert());
+            Thread runSend = new Thread(() => SendAdvertLoop());
             runSend.Name = "Neighbours SendAdvert Thread";
             runSend.Start();
 
@@ -39,7 +46,16 @@ namespace CncLocalRelay
             while (UdpRelay.run_relay)
             {
                 IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                byte[] data = nbUdpClient.Receive(ref remoteEP); // BLOCKS until a packet arrives
+                byte[] data;
+                try
+                {
+                    data = nbUdpClient.Receive(ref remoteEP); // BLOCKS until a packet arrives
+                }
+                catch(System.Net.Sockets.SocketException socketex)
+                {
+                    continue;
+                }
+                
 
                 bool skipLocal = false;
                 foreach (var localIP in GetLocalIPAddresses())
@@ -86,10 +102,23 @@ namespace CncLocalRelay
                         {
                             if (nb.Address.Equals(remoteEP.Address))
                             {
+                                //Port changes.
                                 if(nb.StartPort != startPortRemote)
                                 {
                                     nb.StartPort = startPortRemote; //Port has changed on remote peer.
                                     Trace.WriteLine($"Remote start port has changed on remote peer: {nb.Address}:{nb.StartPort}");
+                                }
+
+                                //Game sessions.
+                                nb.remoteSessions.Clear();
+                                foreach (string gdata in splitData.Skip(2))
+                                {
+                                    var gcsdata = gdata.Split(":");
+                                    GameConnSession gcs = new GameConnSession();
+                                    gcs.sessionId = int.Parse(gcsdata[0]);
+                                    gcs.connectionId = int.Parse(gcsdata[1]);
+                                    gcs.localport = int.Parse(gcsdata[2]);
+                                    nb.remoteSessions.Add(gcs);
                                 }
                                 nExists = true;
                                 break;
@@ -118,6 +147,58 @@ namespace CncLocalRelay
 
             }
             neighboursList.Clear();
+            localSessions.Clear();
+        }
+
+        public static void shutdown()
+        {
+            nbUdpClient.Close();
+        }
+
+        public static void AddSession(int SessionId, int ConnectionId, int LocalPort)
+        {
+            lock (_sLock)
+            {
+                localSessions.Add(new GameConnSession()
+                {
+                    sessionId = SessionId,
+                    connectionId = ConnectionId,
+                    localport = LocalPort
+                });
+            }
+        }
+        public static void AddSession(GameConnSession session)
+        {
+            bool exists = false;
+            lock (_sLock)
+            {
+                foreach(var existing_session in localSessions)
+                {
+                    if(existing_session.EqualsConSess(session))
+                    {
+                        //Session exists, update port if changed.
+                        existing_session.localport = session.localport;
+                        exists = true;
+                        break;
+                    }
+                }
+                if(!exists)
+                {
+                    localSessions.Add(session);
+                }
+            }
+            SendAdvert();
+        }
+
+
+        public static List<GameConnSession> GetSessions()
+        {
+            List<GameConnSession> tmpList;
+            lock (_sLock)
+            {
+                tmpList = localSessions.ToList();
+            }
+            return tmpList;
         }
 
         public static List<LocalNeighbours> GetList()
@@ -130,15 +211,25 @@ namespace CncLocalRelay
             return tmpList;
         }
 
-        static void SendAdvert()
+        static void SendAdvertLoop()
         {
             while (UdpRelay.run_relay)
             {
-                string message = $"{localStartPort.ToString()},{localStartPort.ToString()}";
-                byte[] messageBytes = Encoding.ASCII.GetBytes(message);
+                SendAdvert();
+                Thread.Sleep(1000);
+            }
+        }
+        public static void SendAdvert()
+        {
+            string message = $"{localStartPort.ToString()},{localStartPort.ToString()}";
+            foreach (var local_session in localSessions.ToList())
+            {
+                message += $",{local_session.sessionId}:{local_session.connectionId}:{local_session.localport}";
+            }
+            byte[] messageBytes = Encoding.ASCII.GetBytes(message);
+            lock (_sendLock)
+            {
                 nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, 48632));
-
-                Thread.Sleep(5000);
             }
         }
 

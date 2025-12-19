@@ -68,7 +68,10 @@ namespace CncLocalRelayUI
             {
                 RelayControl.StopRelay();
             }
+            RelayRunning = false;
             _cts?.Cancel();
+
+            LocalNeighbours.shutdown();
         }
 
 
@@ -84,10 +87,28 @@ namespace CncLocalRelayUI
                     string monitor_data = "";
                     foreach (var nb in LocalNeighbours.GetList())
                     {
-                        monitor_data += $"Linked peer: {nb.Address}:{nb.StartPort}\n";
+                        string match_session = "";
+                        foreach (var gs in LocalNeighbours.GetSessions())
+                        {
+                            //monitor_data += $"Remote Game Session: ({gs.sessionId}:{gs.connectionId}:{gs.localport}) \n";
+                            foreach (var rgs in nb.remoteSessions)
+                            {
+                                if (gs.EqualsConSess(rgs))
+                                {
+                                    match_session = $" Matched Session ({rgs.sessionId}:{rgs.connectionId}:{rgs.localport})";
+                                    break;
+                                }
+                            }
+                        }
+                        monitor_data += $"Linked peer: {nb.Address}:{nb.StartPort} {match_session}\n";
                     }
 
-                    Dispatcher.UIThread.InvokeAsync(async () =>
+                    foreach (var gs in LocalNeighbours.GetSessions())
+                    {
+                        monitor_data += $"\nLocal Game Session: {gs.sessionId}:{gs.connectionId}:{gs.localport}\n";
+                    }
+
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         txtMonitor.Text = monitor_data;
                     });
@@ -109,16 +130,7 @@ namespace CncLocalRelayUI
             RelayRunning = true;
             btnStop.IsEnabled = true;
         }
-
-        async void RelayException(Exception ex)
-        {
-            Debug.WriteLine(ex);
-            await Dispatcher.UIThread.InvokeAsync(async () =>
-            {
-                txtRelayStatus.Text = $"Relay Status: Error: {ex.Message}";
-            });
-            RelayRunning = false;
-        }
+              
 
 
         public void OnStopClicked(object sender, RoutedEventArgs args)
@@ -134,8 +146,18 @@ namespace CncLocalRelayUI
         {
             txtPortStart.IsEnabled = State;
             chkUPNP.IsEnabled = State;
+            chkAltPeer.IsEnabled = State;
         }
 
+        async void RelayException(Exception ex)
+        {
+            Debug.WriteLine(ex);
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+            {
+                txtRelayStatus.Text = $"Relay Status: Error: {ex.Message}";
+            });
+            RelayRunning = false;
+        }
 
 
         private void txtPortChanged(object? sender, TextChangedEventArgs e)
@@ -213,6 +235,11 @@ namespace CncLocalRelayUI
                 FileName = "https://github.com/mrhteriyaki/RA3LANHelper",
                 UseShellExecute = true
             });
+        }
+
+        private void chkAltPeer_CheckedChanged(object? sender, RoutedEventArgs e)
+        {
+            UdpRelay.alt_peer_mode = (bool)chkAltPeer.IsChecked;
         }
     }
 }
