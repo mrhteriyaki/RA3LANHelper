@@ -14,12 +14,12 @@ The NAT Negotiation server provides the public internet address to other clients
 A nat-loopback connection can be achived with a port forward rule when using a static number port/s.
 The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.
 This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.
-It also directs traffic directly to lan clients using a local peer discovery process and no longer requires port forwards.
+It routes traffic directly to lan clients using a local peer discovery process and no longer requires port forwards for access between lan users.
 
 ## Instructions:  
 1. Download the tool(available from releases on the right).  
-2. Run the tool as administrator (Admin Rights are only required for the Host Redirection setting change).  
-3. Click Enable on NAT-NEG Redirection  
+2. Run the tool as administrator (Admin Rights are only required for the Host Redirection setting change, not required for normal usage).  
+3. Click Enable on NAT-NEG Redirection.  
 **(This will redirect NAT Negotiation traffic to the local machine and persists even if the app is closed)**  
 4. Select a starting port range number or use the random one provided.  
 (The port range must be unique per machine within your network).  
@@ -33,26 +33,28 @@ Image the tool interface:
 **Port Forwarding Note:**  
 Port forwarding is no longer required to provide internal lan-to-lan traffic.
 The system may have issues if your local nat router uses port randomisation as the ports detected by the cnc online nat negotiation server will not be the same.
-You can use UPNP will try to automatically open required ports but can be unreliable depending on the router or may not include NAT Loopback.
-If you have issues, you can try adding port forwards on your router to make it more reliable so that the traffic passes through.
-RA3 uses multiple ports to send from, forward a range of 50 ports from the starting port number set on the relay.
-Example: PC1 has a start port 50000 would need UDP Ports 50000-50050 forwarded, PC2 with start port 40000 would need 40000-40050.  
-This has been successfully tested on a Mikrotik router with manual port forwards.  
+You can try using the alt peer mode to resolve this issue (all clients must use matching setting).
+
+UPNP will try to automatically open required ports if available on your router for forwarding external traffic but it's not normally required.
 
 **Notes & Limitations**
 - Dropout / Disconnection handling does not work if you stop the relay and resume it will cause player dropout.
 - Co-Op Campaign is supported Relay has been tested and does resolve same issue for campaign co-op.
 - The connection attempt between players only occurs for a short period of time when the player joins the match. The game indicates it is retrying to connect to players in the chat but it isn't, connection attempts will stop after the first minute.
 - Port randomisation if enabled on your router's NAT system can cause problems.
+- Tested with Mikrotik RouterOS as the local gateway.
 
 **Command Line Version**  
 For a command line version of the program that includes console logging information, use the CncLocalRelay.exe
 The only parameter required is the starting port range eg: CnCLocalRelay.exe 51000
-This may also work with Linux systems but is untested.
 
 **Linux Support Notes**
 The app runs on linux however has not been tested.  
 Extract the tar.gz file and run the CncLocalRelayUI file.  
-Redirecting the nat negotiation requires sudo permissions to update the `/etc/hosts` file.  
-It needs to add the line:  
-`127.0.0.1 natneg.server.cnc-online.net`  
+
+
+**Dont want to run as administratoror sudo**
+You can manually update your host file entry, it just needs this line added:  
+`127.0.0.1 natneg.server.cnc-online.net`
+On Windows it's at C:\Windows\System32\Drivers\etc\hosts
+On Linux it's at /etc/hosts
