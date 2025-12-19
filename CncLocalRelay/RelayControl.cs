@@ -48,8 +48,11 @@ namespace CncLocalRelay
 
             Trace.WriteLine("Starting relay - natneg server ip: " + natneg_server);
             UdpRelay.NatNegRealServer = IPAddress.Parse(natneg_server);
+            UdpRelay.run_relay = true;
             UDPR = new UdpRelay(StartPort, UPNP);
-            UDPR.RunRelay();
+            UDPR.Relay();
+
+            
         }
 
         public static void StopRelay()

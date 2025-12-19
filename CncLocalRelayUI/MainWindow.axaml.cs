@@ -17,6 +17,7 @@ namespace CncLocalRelayUI
         static readonly string sfln = "settings.ini";
         static readonly string hostwarningadmin = "Failed to update system host file - this requires administrator rights.\nPlease re-launch this program using 'Run As Administrator'\nAlternatively check you have rights to the file:\nC:\\Windows\\System32\\Drivers\\etc\\hosts";
         bool RelayRunning = false;
+        private CancellationTokenSource _cts;
 
         public MainWindow()
         {
@@ -58,6 +59,8 @@ namespace CncLocalRelayUI
             }
 
             HostrecDisplay();
+
+            RunMonitor();
         }
         private void OnClosing(object? sender, WindowClosingEventArgs e)
         {
@@ -65,9 +68,34 @@ namespace CncLocalRelayUI
             {
                 RelayControl.StopRelay();
             }
+            _cts?.Cancel();
         }
 
 
+
+        private void RunMonitor()
+        {
+            _cts = new CancellationTokenSource();
+
+            Task.Run(async () =>
+            {
+                while (!_cts.IsCancellationRequested)
+                {
+                    string monitor_data = "";
+                    foreach (var nb in LocalNeighbours.GetList())
+                    {
+                        monitor_data += $"Linked peer: {nb.Address}:{nb.StartPort}\n";
+                    }
+
+                    Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        txtMonitor.Text = monitor_data;
+                    });
+
+                    await Task.Delay(1000, _cts.Token);
+                }
+            });
+        }
 
         public void OnStartClicked(object sender, RoutedEventArgs args)
         {
@@ -176,6 +204,15 @@ namespace CncLocalRelayUI
             {
                 FileControl.AddLineToFile(sfln, "upnp=disabled");
             }
+        }
+
+        private void OnLinkClicked(object? sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://github.com/mrhteriyaki/RA3LANHelper",
+                UseShellExecute = true
+            });
         }
     }
 }

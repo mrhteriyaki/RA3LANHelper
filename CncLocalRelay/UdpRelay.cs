@@ -36,7 +36,7 @@ namespace CncLocalRelay
             _StartPortOffset = StartPortOffset;
         }
 
-        void Relay()
+        public void Relay()
         {
             IPEndPoint targetEndpoint = new IPEndPoint(NatNegRealServer, natneg_port);
             IPEndPoint incomingEndPoint = new IPEndPoint(IPAddress.Any, 0);
@@ -111,7 +111,8 @@ namespace CncLocalRelay
                         var pubip = PublicIP.Get();
                         byte[] findByte = [pubip[0], pubip[1], pubip[2], pubip[3]];
                         //for each neighbor, replace with their local ip and port number start.
-                        foreach (var nb in LocalNeighbours.neighboursList)
+                        
+                        foreach (var nb in LocalNeighbours.GetList())
                         {
                             byte[] replaceByte = nb.Address.GetAddressBytes();
                             ReplacePattern(receivedDataRemote, findByte, replaceByte, nb.StartPort);
@@ -222,13 +223,6 @@ namespace CncLocalRelay
 
 
         }
-
-        public void RunRelay()
-        {
-            inThread = new Thread(Relay);
-            inThread.Start();
-        }
-
 
         static void ReplacePattern(byte[] data, byte[] findPrefix4, byte[] replacePrefix4, int StartPortRange, int range = 50)
         {

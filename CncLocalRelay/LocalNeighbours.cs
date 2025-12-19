@@ -13,32 +13,33 @@ namespace CncLocalRelay
 {
     public class LocalNeighbours
     {
-        public static List<LocalNeighbours> neighboursList = new List<LocalNeighbours>();
         public IPAddress Address;
         public int StartPort;
 
-        static int localStartPort;
+        static List<LocalNeighbours> neighboursList = new List<LocalNeighbours>();
+        private static readonly object _nLock = new();
 
-        static UdpClient client = new UdpClient(48632);
+        static int localStartPort;
+        static UdpClient nbUdpClient = new UdpClient(48632);
 
         public static void RunDiscovery(int startPort)
         {
             localStartPort = startPort;
 
+            neighboursList.Clear();
+
             Thread runSend = new Thread(() => SendAdvert());
+            runSend.Name = "Neighbours SendAdvert Thread";
             runSend.Start();
 
             // Allow reuse if multiple apps / restarts
-            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            client.EnableBroadcast = true;
+            nbUdpClient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            nbUdpClient.EnableBroadcast = true;
 
-            //client.Client.Bind(new IPEndPoint(IPAddress.Any, 0));
-
-            // Blocking receive loop
             while (UdpRelay.run_relay)
             {
                 IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 0);
-                byte[] data = client.Receive(ref remoteEP); // BLOCKS until a packet arrives
+                byte[] data = nbUdpClient.Receive(ref remoteEP); // BLOCKS until a packet arrives
 
                 bool skipLocal = false;
                 foreach (var localIP in GetLocalIPAddresses())
@@ -49,7 +50,7 @@ namespace CncLocalRelay
                         break;
                     }
                 }
-                if(remoteEP.Address.Equals(IPAddress.Loopback))
+                if (remoteEP.Address.Equals(IPAddress.Loopback))
                 {
                     skipLocal = true;
                 }
@@ -63,8 +64,8 @@ namespace CncLocalRelay
                 }
 
                 string dataString = Encoding.ASCII.GetString(data, 0, data.Length);
-                //ProcessPacket(remoteEP, data);
-                if(!dataString.Contains(","))
+
+                if (!dataString.Contains(","))
                 {
                     Trace.WriteLine($"Packet with invalid message from {remoteEP.Address.ToString()}");
                     continue;
@@ -79,40 +80,63 @@ namespace CncLocalRelay
                 {
                     int startPortRemote = int.Parse(splitData[0]);
                     bool nExists = false;
-                    foreach (var nb in neighboursList)
+                    lock (_nLock)
                     {
-                        if (nb.Address.Equals(remoteEP.Address) && nb.StartPort == startPortRemote)
+                        foreach (var nb in neighboursList)
                         {
-                            nExists = true;
-                            break;
+                            if (nb.Address.Equals(remoteEP.Address))
+                            {
+                                if(nb.StartPort != startPortRemote)
+                                {
+                                    nb.StartPort = startPortRemote; //Port has changed on remote peer.
+                                    Trace.WriteLine($"Remote start port has changed on remote peer: {nb.Address}:{nb.StartPort}");
+                                }
+                                nExists = true;
+                                break;
+                            }
                         }
                     }
                     if (!nExists)
                     {
                         Trace.WriteLine($"Neighbour Detected: {remoteEP.Address.ToString()}:{startPortRemote}");
-                        neighboursList.Add(new LocalNeighbours()
+                        lock (_nLock)
                         {
-                            Address = remoteEP.Address,
-                            StartPort = startPortRemote
-                        });
+                            neighboursList.Add(new LocalNeighbours()
+                            {
+                                Address = remoteEP.Address,
+                                StartPort = startPortRemote
+                            });
+                        }
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
+                    Trace.WriteLine($"Neighbours Thread Failure: {ex.Message}");
                     continue;
                 }
 
-                
+
             }
+            neighboursList.Clear();
+        }
+
+        public static List<LocalNeighbours> GetList()
+        {
+            List<LocalNeighbours> tmpList;
+            lock(_nLock)
+            {
+                tmpList = neighboursList.ToList();
+            }
+            return tmpList;
         }
 
         static void SendAdvert()
         {
-            while(UdpRelay.run_relay)
+            while (UdpRelay.run_relay)
             {
                 string message = $"{localStartPort.ToString()},{localStartPort.ToString()}";
                 byte[] messageBytes = Encoding.ASCII.GetBytes(message);
-                client.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, 48632));
+                nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, 48632));
 
                 Thread.Sleep(5000);
             }
@@ -123,21 +147,15 @@ namespace CncLocalRelay
             List<IPAddress> localips = new List<IPAddress>();
             try
             {
-                // Get all network interfaces on the machine
                 NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
-
                 foreach (NetworkInterface networkInterface in networkInterfaces)
                 {
-                    // Consider only operational and IPv4 capable interfaces
                     if (networkInterface.OperationalStatus == OperationalStatus.Up &&
                         (networkInterface.NetworkInterfaceType == NetworkInterfaceType.Wireless80211 ||
                          networkInterface.NetworkInterfaceType == NetworkInterfaceType.Ethernet) &&
                         networkInterface.Supports(NetworkInterfaceComponent.IPv4))
                     {
-                        // Get the IP properties of the interface
                         IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
-
-                        // Get the unicast addresses (IP addresses) associated with the interface
                         foreach (UnicastIPAddressInformation ipAddressInfo in ipProperties.UnicastAddresses)
                         {
                             if (ipAddressInfo.Address.AddressFamily == AddressFamily.InterNetwork)

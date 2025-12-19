@@ -5,8 +5,8 @@
 		mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 		x:Class="CncLocalRelayUI.MainWindow"
 		Title="CNC Relay"
-		Width="310"
-		Height="260">
+		Width="330"
+		Height="330">
 	<StackPanel Margin="10">
 		<TextBlock Text="CNC LAN Relay Tool" Margin="0,0,0,10" />
 
@@ -28,6 +28,8 @@
 			<Button x:Name="btnStart" Content="Start Relay" Grid.Column="0" Click="OnStartClicked" IsEnabled="True" />
 			<Button x:Name="btnStop" Content="Stop Relay" Grid.Column="1" Click="OnStopClicked" IsEnabled="False" />
 		</Grid>
-		
+
+		<TextBlock Text="" x:Name="txtMonitor" Margin="0,0,0,0" />
+		<HyperlinkButton Margin="0,0,0,0" Content="https://github.com/mrhteriyaki/RA3LANHelper" Click="OnLinkClicked"/>
 	</StackPanel>
 </Window>
