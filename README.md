@@ -13,7 +13,8 @@ The NAT Negotiation server provides the public internet address to other clients
 ## The fix:
 A nat-loopback connection can be achived with a port forward rule when using a static number port/s.
 The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.
-This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.  
+This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.
+It also directs traffic directly to lan clients using a local peer discovery process and no longer requires port forwards.
 
 ## Instructions:  
 1. Download the tool(available from releases on the right).  
@@ -22,28 +23,27 @@ This program acts as a proxy that relays the traffic from the random ports to a 
 **(This will redirect NAT Negotiation traffic to the local machine and persists even if the app is closed)**  
 4. Select a starting port range number or use the random one provided.  
 (The port range must be unique per machine within your network).  
-5. On your router add the port forward rule to include a range of 50 ports from the number selected, to your device.
- Most routers will have a start and end port option so that you can forward a 'range' of ports (Multiple ports).
-  If you do not know how to do this, you can try UPNP automatic port forwarding.
-6. Click Start Relay.  
-7. If you have any Windows Firewall prompts, click allow as it uses a listening port for inbound network traffic.  
-8. Play RA3 Online.  
+5. Click Start Relay.  
+6. If you have any Windows Firewall prompts, click allow as it uses a listening port for inbound network traffic.  
+7. Play RA3 Online.  
 
 Image the tool interface:  
 ![uiimage](Images/Image1.png)  
 
 **Port Forwarding Note:**  
-UPNP will try to automatically open required ports but can be unreliable depending on the router or may not include NAT Loopback.
-You can manually port forward on your router to make it more reliable.
-RA3 slowly increments the port number in use, so forward a range of 50 ports from the starting port number set on the relay.
-EG: PC1 has a start port 50000 would need UDP Ports 50000-50050 forwarded, PC2 with start port 40000 would need 40000-40050.  
+Port forwarding is no longer required to provide internal lan-to-lan traffic.
+The system may have issues if your local nat router uses port randomisation as the ports detected by the cnc online nat negotiation server will not be the same.
+You can use UPNP will try to automatically open required ports but can be unreliable depending on the router or may not include NAT Loopback.
+If you have issues, you can try adding port forwards on your router to make it more reliable so that the traffic passes through.
+RA3 uses multiple ports to send from, forward a range of 50 ports from the starting port number set on the relay.
+Example: PC1 has a start port 50000 would need UDP Ports 50000-50050 forwarded, PC2 with start port 40000 would need 40000-40050.  
 This has been successfully tested on a Mikrotik router with manual port forwards.  
 
 **Notes & Limitations**
 - Dropout / Disconnection handling does not work if you stop the relay and resume it will cause player dropout.
 - Co-Op Campaign is supported Relay has been tested and does resolve same issue for campaign co-op.
 - The connection attempt between players only occurs for a short period of time when the player joins the match. The game indicates it is retrying to connect to players in the chat but it isn't, connection attempts will stop after the first minute.
-
+- Port randomisation if enabled on your router's NAT system can cause problems.
 
 **Command Line Version**  
 For a command line version of the program that includes console logging information, use the CncLocalRelay.exe
