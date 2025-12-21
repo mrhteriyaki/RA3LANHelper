@@ -26,10 +26,37 @@ namespace CncLocalRelay
         private static readonly object _sendLock = new();
 
         static int localStartPort;
-        static UdpClient nbUdpClient = new UdpClient(48632);
+        static UdpClient nbUdpClient;
+        static bool initComplete = false;
+        static bool shutdown = false;
+
+        public static readonly int peerDetectionPort = 48632;
+
+        public static void InitPort()
+        {
+            while (!initComplete && !shutdown)
+            {
+                try
+                {
+                    nbUdpClient = new UdpClient(peerDetectionPort);
+                    initComplete = true;
+                }
+                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                {
+                    Thread.Sleep(150);
+                }
+            }
+        }
+
+        public static bool CheckInit()
+        {
+            return initComplete;
+        }
 
         public static void RunDiscovery(int startPort)
         {
+            InitPort();
+
             localStartPort = startPort;
 
             neighboursList.Clear();
@@ -150,9 +177,13 @@ namespace CncLocalRelay
             localSessions.Clear();
         }
 
-        public static void shutdown()
+        public static void StopDiscovery()
         {
-            nbUdpClient.Close();
+            shutdown = true;
+            if(initComplete)
+            {
+                nbUdpClient.Close();
+            }
         }
 
         public static void AddSession(int SessionId, int ConnectionId, int LocalPort)
@@ -229,7 +260,11 @@ namespace CncLocalRelay
             byte[] messageBytes = Encoding.ASCII.GetBytes(message);
             lock (_sendLock)
             {
-                nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, 48632));
+                foreach(var bip in GetLocalBroadcastAddresses())
+                {
+                    nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(bip, peerDetectionPort));
+                }
+                //nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, peerDetectionPort));
             }
         }
 
@@ -265,7 +300,50 @@ namespace CncLocalRelay
             return null;
         }
 
+        static List<IPAddress> GetLocalBroadcastAddresses()
+        {
+            var broadcasts = new List<IPAddress>();
 
+            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                // Skip unusable interfaces
+                if (ni.OperationalStatus != OperationalStatus.Up)
+                    continue;
+
+                if (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback)
+                    continue;
+
+                var ipProps = ni.GetIPProperties();
+
+                foreach (var ua in ipProps.UnicastAddresses)
+                {
+                    if (ua.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
+
+                    if (ua.IPv4Mask == null)
+                        continue;
+
+                    var ipBytes = ua.Address.GetAddressBytes();
+                    var maskBytes = ua.IPv4Mask.GetAddressBytes();
+
+                    var broadcastBytes = new byte[4];
+                    for (int i = 0; i < 4; i++)
+                    {
+                        broadcastBytes[i] = (byte)(ipBytes[i] | (~maskBytes[i]));
+                    }
+
+                    var broadcast = new IPAddress(broadcastBytes);
+
+                    // Avoid duplicates (can happen with multi-IP NICs)
+                    if (!broadcasts.Contains(broadcast))
+                    {
+                        broadcasts.Add(broadcast);
+                    }
+                }
+            }
+
+            return broadcasts;
+        }
 
     }
 }

@@ -71,7 +71,7 @@ namespace CncLocalRelayUI
             RelayRunning = false;
             _cts?.Cancel();
 
-            LocalNeighbours.shutdown();
+            LocalNeighbours.StopDiscovery();
         }
 
 
@@ -120,6 +120,12 @@ namespace CncLocalRelayUI
 
         public void OnStartClicked(object sender, RoutedEventArgs args)
         {
+            if(!HostControl.CheckHostRecord())
+            {
+                txtRelayStatus.Text = "Cannot start relay while redirection is disabled.";
+                return;
+            }
+
             int startport = int.Parse(txtPortStart.Text);
             btnStart.IsEnabled = false;
             SetControlState(false);
@@ -152,9 +158,14 @@ namespace CncLocalRelayUI
         async void RelayException(Exception ex)
         {
             Debug.WriteLine(ex);
+            string error_text = $"Relay Status: Error: {ex.Message}";
+            if (!LocalNeighbours.CheckInit())
+            {
+                error_text += $"\nPeer Detection Service has not been able to lock port used for discovery UDP - {LocalNeighbours.peerDetectionPort.ToString()}";
+            }
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                txtRelayStatus.Text = $"Relay Status: Error: {ex.Message}";
+                txtRelayStatus.Text = error_text;
             });
             RelayRunning = false;
         }
