@@ -264,7 +264,7 @@ namespace CncLocalRelay
                 {
                     nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(bip, peerDetectionPort));
                 }
-                //nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, peerDetectionPort));
+                nbUdpClient.Send(messageBytes, messageBytes.Length, new IPEndPoint(IPAddress.Broadcast, peerDetectionPort));
             }
         }
 
