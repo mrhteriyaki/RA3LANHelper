@@ -11,10 +11,10 @@ A limitation in most Router NAT services doesn't allow connections from within t
 The NAT Negotiation server provides the public internet address to other clients, which due to the limitation doesn't allow clients on the same network to reach each other.
 
 ## The fix:
-A nat-loopback connection can be achived with a port forward rule when using a static number port/s.
-The RA3 process uses a random (dynamic) port which prevents the normal usage of port forwards except DMZ forwarding of all ports.
-This program acts as a proxy that relays the traffic from the random ports to a range of ports starting from a number you can specify in this tool.
-It routes traffic directly to lan clients using a local peer discovery process and no longer requires port forwards for access between lan users.
+Route traffic directly to lan clients.
+This program acts as a proxy that relays the traffic from the random source ports to a range of known ports starting from a number you can specify in this tool.
+A lan discovery process will detect other clients and update the address provided from CNC Online servers to the local address.
+
 
 ## Instructions:  
 1. Download the tool(available from releases on the right).  
