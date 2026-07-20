@@ -195,13 +195,12 @@ namespace CncLocalRelayUI
             try
             {
                 HostControl.EnableHostRecord(true);
+                HostrecDisplay();
             }
             catch (Exception ex)
             {
-                txtRedirection.Text = $"NAT-NEG Redirection: {ex.Message}";
-            }
-
-            HostrecDisplay();
+                txtRedirection.Text = $"Update to Host File Failed.\nRedirection requires 'run as Administrator'.\n{ex.Message}";
+            }           
         }
 
         public void DisableHost(object sender, RoutedEventArgs args)
